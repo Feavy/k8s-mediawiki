@@ -18,7 +18,7 @@ jobs:
       - uses: feavy/deploy@main
         env:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-          DEPLOYMENT: postgres-deployment.yml
+          DEPLOYMENT: mariadb-deployment.yml
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
       - uses: feavy/deploy@main
