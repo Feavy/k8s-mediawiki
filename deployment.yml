@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: wiki
+  labels:
+    name: wiki
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mediawiki
+  namespace: wiki
+  labels:
+    k8s-app: mediawiki
+spec:
+  selector:
+    matchLabels:
+      k8s-app: mediawiki
+  template:
+    metadata:
+      labels:
+        k8s-app: mediawiki
+        name: mediawiki
+    spec:
+      containers:
+        - name: mediawiki
+          image: mediawiki:1.39.3
+          ports:
+            - name: http
+              containerPort: 80
+          volumeMounts:
+            - name: mediawiki-persistent-storage
+              mountPath: /var/www/html/images
+      volumes:
+        - name: mediawiki-persistent-storage
+          hostPath:
+            path: /mnt/wiki-data/mediawiki
+      nodeSelector:
+        kubernetes.io/hostname: 'oracle-paris'
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: mediawiki-service
+  namespace: wiki
+spec:
+  selector:
+    k8s-app: mediawiki
+  ports:
+    - protocol: TCP
+      port: 80
+      name: web
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: mediawiki-route
+  namespace: traefik
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`wiki.feavy.fr`)
+      services:
+        - name: mediawiki-service
+          namespace: wiki
+          port: web
+  tls:
+    secretName: feavy-tls

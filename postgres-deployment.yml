@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: wiki
+  labels:
+    app: postgres
+data:
+  POSTGRES_DB: mediawiki
+  POSTGRES_USER: mediawiki
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secrets
+  namespace: wiki
+  labels:
+    app: postgres
+stringData:
+  POSTGRES_PASSWORD: ${DB_PASSWORD}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: wiki
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: 'oracle-paris'
+      containers:
+        - name: postgres
+          image: postgres:13
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - configMapRef:
+                name: postgres-config
+            - secretRef:
+                name: postgres-secrets
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgredb
+      volumes:
+        - name: postgredb
+          hostPath:
+            path: /mnt/wiki-data/postgres
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: postgres-service
+  namespace: wiki
+spec:
+  selector:
+    app: postgres
+  ports:
+    - protocol: TCP
+      port: 5432
+      name: main
+  type: ClusterIP
