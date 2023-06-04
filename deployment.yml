@@ -6,15 +6,14 @@ metadata:
     name: wiki
 ---
 apiVersion: v1
-kind: ConfigMap
+kind: Secret
 metadata:
-  name: mediawiki-config
+  name: mediawiki-secret
   namespace: wiki
   labels:
     app: mediawiki
 data:
-  LocalSettings.php: |
-    ${LOCAL_SETTINGS}
+  LocalSettings.php: ${LOCAL_SETTINGS}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -50,8 +49,8 @@ spec:
           hostPath:
             path: /mnt/wiki-data/mediawiki
         - name: mediawiki-config
-          configMap:
-            name: mediawiki-config
+          secret:
+            secretName: mediawiki-secret
       nodeSelector:
         kubernetes.io/hostname: 'oracle-paris'
 ---
