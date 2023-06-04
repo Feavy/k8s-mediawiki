@@ -25,6 +25,7 @@ jobs:
         env:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
           DEPLOYMENT: deployment.yml
+          LOCAL_SETTINGS: ${{ secrets.LOCAL_SETTINGS }}
 
       - name: Restart deployment
         run: kubectl rollout restart deployment mediawiki -n wiki

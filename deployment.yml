@@ -5,6 +5,17 @@ metadata:
   labels:
     name: wiki
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mediawiki-config
+  namespace: wiki
+  labels:
+    app: mediawiki
+data:
+  LocalSettings.php: |
+    ${LOCAL_SETTINGS}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -31,10 +42,16 @@ spec:
           volumeMounts:
             - name: mediawiki-persistent-storage
               mountPath: /var/www/html/images
+            - mountPath: /var/www/html/LocalSettings.php
+              name: mediawiki-config
+              subPath: LocalSettings.php
       volumes:
         - name: mediawiki-persistent-storage
           hostPath:
             path: /mnt/wiki-data/mediawiki
+        - name: mediawiki-config
+          configMap:
+            name: mediawiki-config
       nodeSelector:
         kubernetes.io/hostname: 'oracle-paris'
 ---
